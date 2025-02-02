@@ -15,6 +15,7 @@ const Home = () => {
   const [recipient, setRecipient] = useState("");
   const [userBalance, setUserBalance] = useState("0");
   const [transferAmount, setTransferAmount] = useState("");
+  const [withdrawAmount, setWithdrawAmount] = useState("");
 
   // Convert BigNumber to Ethers
   const toEthers = (bigInt: ethers.BigNumber) => {
@@ -113,6 +114,23 @@ const Home = () => {
     }
   };
 
+  const handleWithdraw = async () => {
+    if (!contract || !withdrawAmount) return;
+    console.log(withdrawAmount);
+
+    try {
+      const tx = await contract.withdraw(
+        ethers.utils.parseEther(withdrawAmount)
+      );
+      await tx.wait();
+      fetchBalance(contract);
+      setRecipient("");
+      setTransferAmount("");
+    } catch (error) {
+      console.error("Withdraw failed:", error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-lg">
@@ -160,6 +178,23 @@ const Home = () => {
               className="w-full mt-2 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors"
             >
               Deposit
+            </button>
+          </div>
+
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Withdraw Amount</h2>
+            <input
+              type="text"
+              placeholder="Amount in ETH"
+              value={withdrawAmount}
+              onChange={(e) => setWithdrawAmount(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              onClick={handleWithdraw}
+              className="w-full mt-2 bg-violet-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              Withdraw
             </button>
           </div>
 
