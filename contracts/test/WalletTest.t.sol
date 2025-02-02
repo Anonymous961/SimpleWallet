@@ -30,16 +30,16 @@ contract WalletTest is Test {
         assertEq(balance, 1 ether);
     }
 
-    function testTransfer() public{
-        vm.deal(alice,1 ether);
+    function testTransfer() public {
+        vm.deal(alice, 1 ether);
         vm.prank(alice);
-        wallet.deposit{value:1 ether}();
+        wallet.deposit{value: 1 ether}();
 
         vm.prank(alice);
-        wallet.transfer(charlie,0.4 ether);
+        wallet.transfer(charlie, 0.4 ether);
 
-        assertEq(wallet.balances(alice),0.6 ether);
-        assertEq(wallet.balances(charlie),0.4 ether);
+        assertEq(wallet.balances(alice), 0.6 ether);
+        assertEq(wallet.balances(charlie), 0.4 ether);
     }
 
     function testWithdraw() public {

@@ -18,7 +18,7 @@ contract Wallet {
     function transfer(address _to, uint256 _amount) public {
         require(balances[msg.sender] >= _amount, "Insufficient funds");
         balances[msg.sender] -= _amount;
-        balances[_to]+=_amount;
+        balances[_to] += _amount;
         (bool sent,) = payable(_to).call{value: _amount}("");
         require(sent, "Failed to send Ether");
     }
