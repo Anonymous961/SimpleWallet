@@ -17,7 +17,10 @@ const Home = () => {
   const [transferAmount, setTransferAmount] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("");
 
-  // Convert BigNumber to Ethers
+  const [loadingDeposit, setLoadingDeposit] = useState(false);
+  const [loadingTransfer, setLoadingTransfer] = useState(false);
+  const [loadingWithdraw, setLoadingWithdraw] = useState(false);
+
   const toEthers = (bigInt: ethers.BigNumber) => {
     return ethers.utils.formatEther(bigInt);
   };
@@ -40,20 +43,18 @@ const Home = () => {
         setProvider(provider);
         setSigner(signer);
         setUserAddress(userAddress);
-        // setBalance(toEthers(balance))
         fetchUserBalance(signer);
         fetchBalance(contract);
       } else {
-        alert("Please install metamask!");
+        alert("Please install Metamask!");
       }
     };
 
     init();
 
-    // Listen for account changes
     window.ethereum?.on("accountsChanged", (accounts: string[]) => {
       if (accounts.length > 0) {
-        init(); // Reinitialize everything with the new account
+        init();
       } else {
         setSigner(null);
         setUserAddress("");
@@ -73,7 +74,6 @@ const Home = () => {
 
   const fetchBalance = async (contract: ethers.Contract) => {
     const balance = await contract.getBalance();
-    console.log("Contract balance: ", toEthers(balance));
     setBalance(toEthers(balance));
   };
 
@@ -84,22 +84,24 @@ const Home = () => {
 
   const handleDeposit = async () => {
     if (!contract || !amount) return;
-
+    setLoadingDeposit(true);
     try {
-      const tx = await contract?.deposit({
+      const tx = await contract.deposit({
         value: ethers.utils.parseEther(amount),
       });
       await tx.wait();
-      if (contract) fetchBalance(contract);
+      fetchBalance(contract);
       setAmount("");
     } catch (error) {
       console.error("Deposit failed:", error);
+    } finally {
+      setLoadingDeposit(false);
     }
   };
 
   const handleTransfer = async () => {
     if (!contract || !recipient || !transferAmount) return;
-
+    setLoadingTransfer(true);
     try {
       const tx = await contract.transfer(
         recipient,
@@ -111,23 +113,25 @@ const Home = () => {
       setTransferAmount("");
     } catch (error) {
       console.error("Transfer failed:", error);
+    } finally {
+      setLoadingTransfer(false);
     }
   };
 
   const handleWithdraw = async () => {
     if (!contract || !withdrawAmount) return;
-    console.log(withdrawAmount);
-
+    setLoadingWithdraw(true);
     try {
       const tx = await contract.withdraw(
         ethers.utils.parseEther(withdrawAmount)
       );
       await tx.wait();
       fetchBalance(contract);
-      setRecipient("");
-      setTransferAmount("");
+      setWithdrawAmount("");
     } catch (error) {
       console.error("Withdraw failed:", error);
+    } finally {
+      setLoadingWithdraw(false);
     }
   };
 
@@ -175,14 +179,17 @@ const Home = () => {
             />
             <button
               onClick={handleDeposit}
-              className="w-full mt-2 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors"
+              disabled={loadingDeposit}
+              className={`w-full mt-2 py-2 px-4 rounded-lg transition-colors ${
+                loadingDeposit ? "bg-gray-400" : "bg-blue-500 hover:bg-blue-600"
+              } text-white`}
             >
-              Deposit
+              {loadingDeposit ? "Processing..." : "Deposit"}
             </button>
           </div>
 
           <div>
-            <h2 className="text-xl font-semibold mb-4">Withdraw Amount</h2>
+            <h2 className="text-xl font-semibold mb-4">Withdraw</h2>
             <input
               type="text"
               placeholder="Amount in ETH"
@@ -192,9 +199,14 @@ const Home = () => {
             />
             <button
               onClick={handleWithdraw}
-              className="w-full mt-2 bg-violet-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors"
+              disabled={loadingWithdraw}
+              className={`w-full mt-2 py-2 px-4 rounded-lg transition-colors ${
+                loadingWithdraw
+                  ? "bg-gray-400"
+                  : "bg-violet-500 hover:bg-violet-600"
+              } text-white`}
             >
-              Withdraw
+              {loadingWithdraw ? "Processing..." : "Withdraw"}
             </button>
           </div>
 
@@ -216,9 +228,14 @@ const Home = () => {
             />
             <button
               onClick={handleTransfer}
-              className="w-full mt-2 bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors"
+              disabled={loadingTransfer}
+              className={`w-full mt-2 py-2 px-4 rounded-lg transition-colors ${
+                loadingTransfer
+                  ? "bg-gray-400"
+                  : "bg-green-500 hover:bg-green-600"
+              } text-white`}
             >
-              Transfer
+              {loadingTransfer ? "Processing..." : "Transfer"}
             </button>
           </div>
         </div>
